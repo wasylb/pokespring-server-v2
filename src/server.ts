@@ -3,6 +3,8 @@ import bodyParser from 'body-parser';
 import mongoose, { mongo } from 'mongoose';
 
 import * as pokemonController from './controllers/pokemon';
+import * as userController from './controllers/user';
+
 
 
 const app = express();
@@ -27,6 +29,9 @@ mongoose.connect(dbURI + dbName, { useNewUrlParser: true })
         });
 
 app.get('/pokemons', pokemonController.getPokemons);
+app.get('/users', userController.getUsers);
+app.post('/users', userController.createUser);
+
 
 
 
