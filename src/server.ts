@@ -30,7 +30,9 @@ mongoose.connect(dbURI + dbName, { useNewUrlParser: true })
 
 app.get('/pokemons', pokemonController.getPokemons);
 app.get('/users', userController.getUsers);
+app.get('/users/:id', userController.getUser);
 app.post('/users', userController.createUser);
+
 
 
 

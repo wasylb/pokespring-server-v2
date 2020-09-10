@@ -1,8 +1,6 @@
-import mongoose from 'mongoose';
-import {Request, Response} from 'express';
+import {Request, Response, request} from 'express';
 import {UserModel} from '../schemas/UserSchema';
 import {IUser} from '../interfaces/IUser';
-import BodyParser from 'body-parser';
 import {Crypt} from '../utils/Crypt';
 
 export let getUsers = (req: Request, res: Response) => {
@@ -14,13 +12,23 @@ export let getUsers = (req: Request, res: Response) => {
     });
 };
 
+export let getUser = (req: Request, res: Response) => {
+    UserModel.findById(req.params.id, (err, user) => {
+        if (err) {
+            res.status(404).json({
+                status: "Failure",
+                data: {errorMessage: 'User with given ID doesn\'t exist'}
+            });
+        }
+        res.json(user);
+    });
+};
+
 export let createUser = (req: Request, res: Response) => {
     const crypt: Crypt = new Crypt(10);
     console.log(req.body);
-    const user: IUser = JSON.parse(JSON.stringify(req.body));
+    const user: IUser = req.body as IUser;
     
-
-    // IMPLEMENT CHECK IF USER ALREADY EXISTS
     UserModel.find({login: user.login})
              .then(results => {
                  if (results.length === 0) {
@@ -54,3 +62,7 @@ export let createUser = (req: Request, res: Response) => {
                  });
              });
 }
+
+    export let login = (req: Request, res: Response) => {
+
+    }
