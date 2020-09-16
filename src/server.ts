@@ -1,16 +1,15 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 import mongoose, { mongo } from 'mongoose';
-
-import * as pokemonController from './controllers/pokemon';
-import * as userController from './controllers/user';
-
-
 
 const app = express();
 const dbURI = 'mongodb://localhost/';
 const dbName = 'pokespring';
 const appPort = 3000;
+
+const userRouter = require('./routers/user.router');
+app.use(cors());
 
 app.use(bodyParser.urlencoded({
     extended: true
@@ -28,14 +27,8 @@ mongoose.connect(dbURI + dbName, { useNewUrlParser: true })
             process.exit();
         });
 
-app.get('/pokemons', pokemonController.getPokemons);
-app.get('/users', userController.getUsers);
-app.get('/users/:id', userController.getUser);
-app.post('/users', userController.createUser);
+// app.get('/pokemons', authenticate, pokemonController.getPokemons);
 
-
-
-
-
+app.use(userRouter);
 
 app.listen(appPort, () => console.log(`App running on port ${appPort}`));
