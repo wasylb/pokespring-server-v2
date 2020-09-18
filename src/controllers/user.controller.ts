@@ -80,3 +80,28 @@ export let login = async (req: Request, res: Response) => {
         res.status(400).send(error);
     }
 }
+
+export let isTokenValid = async (req: Request, res: Response) => {
+    try {
+        const { id, token } = req.body;
+        const user = (await User.findById(id)) as UserDocument;
+
+        if (user) {
+            const tokenFound = user.tokens.find(inToken => inToken.token === token)
+            if (tokenFound) {
+                res.send({status: "Success",
+                          data: {}});
+            } else {
+                res.status(401).json({
+                    errorMessage: 'Token is not valid'
+                });
+            }
+        } else {
+            res.status(401).json({
+                errorMessage: 'User with provided ID does not exist'
+            });
+        }
+    } catch(error) {
+        res.status(400).send(error);
+    }
+}

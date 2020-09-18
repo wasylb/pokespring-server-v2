@@ -9,6 +9,7 @@ userRouter.get('/users', auth, userController.getUsers);
 userRouter.get('/users/user/:id', auth, userController.getUser);
 userRouter.post('/users/register', userController.register);
 userRouter.post('/users/login', userController.login);
+userRouter.post('/users/validateToken', auth, userController.isTokenValid);
 //router.post('/users/logout', auth, async (req: IRequestWithIUser, res: Response) => {
 //     try {
 //         req.user.tokens = req.user.tokens.filter((token) => {
