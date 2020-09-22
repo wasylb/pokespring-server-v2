@@ -4,15 +4,16 @@ import {Request, Response, request} from 'express';
 import {User, UserDocument} from '../schemas/UserSchema';
 import { NextFunction } from 'express';
 import { IRequestWithUser } from '../interfaces/IRequestWithUser';
-import { IUser } from '../interfaces/IUser';
-import { IServerToken } from '../interfaces/IServerToken';
 
 const auth = async (req: IRequestWithUser, res: Response, next: NextFunction) => {
-    let token = req.header('Authorization')?.replace('Bearer ', '') as string;
-    if (token) {
+    let reqToken = req.header('Authorization')?.replace('Bearer ', '') as string;
+    if (reqToken) {
         try {
-            const data = jwt.verify(token, authConfig.secret);
-            const user = await User.findOne({email: (data as any).email, 'tokens.token': token});
+            const data = jwt.verify(reqToken, authConfig.secret);
+            const user = await User.findOne({email: (data as any).email, token: reqToken});
+            console.log(data.email);
+            console.log(user);
+            console.log(reqToken)
             if (!user) {
                 throw new Error();
             }

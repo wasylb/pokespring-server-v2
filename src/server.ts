@@ -2,6 +2,10 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import mongoose, { mongo } from 'mongoose';
+import * as pokemonController from './controllers/pokemon.controller';
+
+const auth = require('./middlewares/auth');
+
 
 const app = express();
 const dbURI = 'mongodb://localhost/';
@@ -27,7 +31,7 @@ mongoose.connect(dbURI + dbName, { useNewUrlParser: true })
             process.exit();
         });
 
-// app.get('/pokemons', authenticate, pokemonController.getPokemons);
+app.get('/pokemons', auth, pokemonController.getPokemons);
 
 app.use(userRouter);
 

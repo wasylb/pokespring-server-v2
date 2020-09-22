@@ -24,12 +24,9 @@ const UserSchema = new Schema({
         type: String,
         required: true
     },
-    tokens: [{
-        token: {
-            type: String,
-            required: true
-        }
-    }]
+    token: {
+        type: String
+    }
 });
 
 UserSchema.methods.generateAuthToken = async function() {
@@ -38,7 +35,7 @@ UserSchema.methods.generateAuthToken = async function() {
         id: user.id,
         email: user.email
     }, authConfig.secret);
-    user.tokens = user.tokens.concat({token});
+    user.token = token;
     await user.save();
     return token;
 }

@@ -14,14 +14,21 @@ export let getUsers = (req: Request, res: Response) => {
 };
 
 export let getUser = (req: Request, res: Response) => {
-    User.findById(req.params.id, (err, user) => {
+    User.findById(req.params.id, (err, user: any) => {
         if (err) {
             res.status(404).json({
                 status: "Failure",
                 data: { errorMessage: 'User with given ID doesn\'t exist' }
             });
         }
-        res.json(user);
+        const userReturned = {
+            id: user?._id,
+            login: user?.login,
+            email: user?.email,
+            visibleName: user?.visibleName,
+            token: user?.token
+        }
+        res.json(userReturned);
     });
 };
 
@@ -31,6 +38,7 @@ export let register = (req: Request, res: Response) => {
     User.find({ login: user.login })
         .then(results => {
             if (results.length === 0) {
+                console.log(user);
                 user.password = bcrypt.hashSync(user.password, authConfig.hashRounds);
                 const newUser = User.create(user);
 
@@ -65,11 +73,23 @@ export let register = (req: Request, res: Response) => {
 export let login = async (req: Request, res: Response) => {
     try {
         const { login, password } = req.body;
-        const user = await User.schema.statics.findByCredentials(login, password);
+        const userFound = await User.schema.statics.findByCredentials(login, password);
         console.log(req.body);
-        if (user) {
-            const token = await user.generateAuthToken();
-            res.send({ user, token });
+        if (userFound) {
+            const user = {
+                id: userFound._id,
+                login: userFound.login,
+                email: userFound.email,
+                visibleName: userFound.visibleName,
+                token: userFound.token
+            }
+            if (!user.token) {
+                const token = await userFound.generateAuthToken();
+                res.send({ user, token });
+            }
+            const token = user.token;
+            res.send({ user, token});
+            
         }
         else {
             return res.status(401).json({
@@ -87,7 +107,7 @@ export let isTokenValid = async (req: Request, res: Response) => {
         const user = (await User.findById(id)) as UserDocument;
 
         if (user) {
-            const tokenFound = user.tokens.find(inToken => inToken.token === token)
+            const tokenFound = user.token === token;
             if (tokenFound) {
                 res.send({status: "Success",
                           data: {}});

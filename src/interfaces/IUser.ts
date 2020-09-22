@@ -6,5 +6,5 @@ export interface IUser {
     password: string;
     visibleName: string;
     email: string;
-    tokens: Array<IUserToken>;
+    token: string;
 }

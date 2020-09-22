@@ -5,6 +5,6 @@ export interface IServerToken {
         password: string;
         visibleName: string;
         email: string;
-        tokens: Array<object>;
+        tokens: object;
     };
   }
