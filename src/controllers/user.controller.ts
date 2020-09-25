@@ -1,5 +1,5 @@
 import { Request, Response, request } from 'express';
-import { User, UserDocument} from '../schemas/UserSchema';
+import { User, UserDocument } from '../schemas/UserSchema';
 import { IUser } from '../interfaces/IUser';
 import bcrypt from 'bcrypt';
 import { authConfig } from '../config/auth.config';
@@ -7,9 +7,17 @@ import { authConfig } from '../config/auth.config';
 export let getUsers = (req: Request, res: Response) => {
     User.find({}, (err, user) => {
         if (err) {
-            res.send(err);
+            res.send({
+                status: "Failure",
+                message: "Users not found",
+                data: { err }
+            });
         }
-        res.json(user);
+        res.json({
+            status: "Success",
+            message: "Users retrieved",
+            data: { user }
+        });
     });
 };
 
@@ -18,7 +26,8 @@ export let getUser = (req: Request, res: Response) => {
         if (err) {
             res.status(404).json({
                 status: "Failure",
-                data: { errorMessage: 'User with given ID doesn\'t exist' }
+                message: "User with given ID doesn\'t exist",
+                data: { err }
             });
         }
         const userReturned = {
@@ -46,19 +55,22 @@ export let register = (req: Request, res: Response) => {
                     .then(user => {
                         res.status(201).json({
                             status: "Success",
+                            message: "User has been registered",
                             data: { user: (user as unknown as UserDocument).login }
                         });
                     })
                     .catch(error => {
                         res.status(400).json({
                             status: "Failure",
-                            data: { errorMessage: error }
+                            message: "Something went wrong",
+                            data: { error }
                         });
                     });
             } else {
                 res.status(409).json({
                     status: "Failure",
-                    data: { errorMessage: "Resource already exists" }
+                    message: "User with provided credentials already exists",
+                    data: {}
                 });
             }
         })
@@ -73,7 +85,16 @@ export let register = (req: Request, res: Response) => {
 export let login = async (req: Request, res: Response) => {
     try {
         const { login, password } = req.body;
-        const userFound = await User.schema.statics.findByCredentials(login, password);
+        let userFound;
+        try {
+             userFound = await User.schema.statics.findByCredentials(login, password);
+        } catch(err) {
+            res.status(401).send({
+                status: "Failure",
+                message: "User and/or password are invalid",
+                data: {err}
+            });
+        }
         console.log(req.body);
         if (userFound) {
             const user = {
@@ -85,19 +106,32 @@ export let login = async (req: Request, res: Response) => {
             }
             if (!user.token) {
                 const token = await userFound.generateAuthToken();
-                res.send({ user, token });
+                user.token = token;
             }
             const token = user.token;
-            res.send({ user, token});
-            
+            res.send({
+                status: "Success",
+                message: "User has been logged in successfully",
+                data: {
+                    user,
+                    token
+                }
+            });
+
         }
         else {
             return res.status(401).json({
-                errorMessage: 'Login failed. Check credentials provided'
+                status: "Failure",
+                message: "User and/or password are invalid",
+                data: {}
             });
         }
     } catch (error) {
-        res.status(400).send(error);
+        res.status(400).send({
+            status: "Failure",
+            message: "Something went wrong",
+            data: {}
+        });
     }
 }
 
@@ -109,19 +143,50 @@ export let isTokenValid = async (req: Request, res: Response) => {
         if (user) {
             const tokenFound = user.token === token;
             if (tokenFound) {
-                res.send({status: "Success",
-                          data: {}});
+                res.send({
+                    status: "Success",
+                    message: "Token has been validated",
+                    data: {}
+                });
             } else {
                 res.status(401).json({
-                    errorMessage: 'Token is not valid'
+                    status: "Failure",
+                    message: 'Token is invalid',
+                    data: {}
                 });
             }
         } else {
             res.status(401).json({
-                errorMessage: 'User with provided ID does not exist'
+                status: "Failure",
+                message: 'User with provided ID does not exist',
+                data: {}
             });
         }
-    } catch(error) {
-        res.status(400).send(error);
+    } catch (error) {
+        res.status(400).send({
+            status: "Failure",
+            message: "Something went wrong",
+            data: {}
+        });
     }
+}
+
+export let logout = async (req: Request, res: Response) => {
+    const userId = req.body.id;
+    const user = (await User.findById(userId)) as UserDocument;
+    if (user) {
+        user.token = '';
+        user.save();
+        res.status(200).send({
+            status: "Success",
+            message: "User has been signed out",
+            data: {}
+        });
+        return;
+    }
+    res.status(404).json({
+        status: "Failure",
+        message: 'User with provided ID does not exist',
+        data: {}
+    });
 }
